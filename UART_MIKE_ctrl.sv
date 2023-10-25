@@ -5,12 +5,12 @@ import UART_MIKE_pkg::*;
 		
 
 module UART_MIKE_ctrl (
-	input n_rst,
-	input clk,
-	input tx_send,
-	input rx_start,
-	input rx_done,
-	input rx_flag_clr
+	input logic n_rst,
+	input logic clk,
+	input logic tx_send,
+	input logic rx_start,
+	input logic rx_done,
+	input logic rx_flag_clr
 	);
 	
 

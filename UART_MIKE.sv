@@ -46,6 +46,10 @@ logic [UART_DATA_SIZE:0] rx_shift_val_debug;
 logic rx_shift_en;
 logic rx_shift_en_ff;
 
+//logic rx_done;
+logic rx_done_nxt;
+logic rx_done_ff;
+
 logic shift_pulse_allign;
 logic shift_pulse_allign_ff;
 
@@ -55,9 +59,14 @@ logic shift_pulse_allign_ff;
 
 assign rx_start = (~rx) & (rx_ff) & (~rx_inprg_ff);
 assign rx_clk_cnt_delete = rx_done;
-assign rx_data_cnt_delete = 1'b0;
-assign rx_done = rx_counter_ov;
+assign rx_data_cnt_delete = rx_done;
 
+//assign rx_done_nxt = (rx_counter_ov) ? 1'b1 : (rx_flag_clr) ? 1'b0 : rx_done_ff;
+//`MIKE_FF_NRST(rx_done_ff, rx_done_nxt, clk, n_rst)
+//assign rx_done = rx_done_ff;
+assign rx_done = rx_counter_ov; // TODO: This is incorrect as it fires at the beginning of the sampling
+
+//TODO: Probably I need to sample another extra value to make sure I'm receiving stop
 
 assign rx_inprg = (rx_start) ? 1'b1 : (rx_done) ? 1'b0 : rx_inprg_ff;
 
