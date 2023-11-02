@@ -16,23 +16,23 @@ module UART_MIKE
 	output logic  rx_flag,
 	output logic  [UART_DATA_WIDTH-1:0] rx_data
 );
-logic tx_send_sync; 
 
-UART_MIKE_ctrl i_UART_MIKE_ctrl(
-									.clk(clk),
-									.n_rst(n_rst),
-									.tx_send(tx_send_sync),
-									.rx_start(rx_start),
-									.rx_done(rx_done),
-									.rx_flag_clr(rx_flag_clr),
-									.tx_done(tx_done),
-									.tx_inprg(tx_inprg),
-									.tx_data_cnt_delete(tx_data_cnt_delete)
-);
+// UART_MIKE_ctrl i_UART_MIKE_ctrl(
+// 									.clk(clk),
+// 									.n_rst(n_rst),
+// 									.tx_send(tx_send_sync),
+// 									.rx_start(rx_start),
+// 									.rx_done(rx_done),
+// 									.rx_flag_clr(rx_flag_clr),
+// 									.tx_done(tx_done),
+// 									.tx_inprg(tx_inprg2),
+// 									.tx_data_cnt_delete(tx_data_cnt_delete2)
+// );
 
 
 
 logic rx_ff;
+logic tx_send_sync; 
 
 `MIKE_FF_NRST(rx_ff, rx, clk, n_rst)
 
@@ -46,10 +46,11 @@ logic rx_data_cnt_delete;
 logic [UART_FRAME_SIZE-1:0] rx_data_index;
 logic [RX_CLOCK_SIZE-1:0] rx_clk_cnt_debug;
 logic [RX_CLOCK_SIZE-1:0] rx_shift_val_debug;
+
 logic rx_shift_en;
 logic rx_shift_en_ff;
 
-//logic rx_done;
+logic rx_done;
 logic rx_done_nxt;
 logic rx_done_ff;
 logic rx_counter_done;
@@ -67,11 +68,24 @@ logic rx_flag_nxt;
 
 logic pre_tx;
 tx_byte_stop tx_byte;
+logic tx_inprg;
 logic tx_inprg_ff;
+logic tx_data_cnt_delete;
 
+logic tx_done;
+logic tx_send_ff;
+logic tx_send_ff2;
 
-`MIKE_FF_NRST(tx_send_sync, tx_send, clk, n_rst)
+logic rx_flag_clr_sync;
+
+`MIKE_FF_NRST(tx_send_ff, tx_send, clk, n_rst)
+`MIKE_FF_NRST(tx_send_ff2, tx_send_ff, clk, n_rst)
 `MIKE_FF_NRST(tx_inprg_ff, tx_inprg, clk, n_rst)
+
+assign tx_send_sync = tx_send_ff & ~tx_send_ff2;
+
+assign tx_inprg = (tx_send) ? 1'b1 : (tx_done) ? 1'b0 : tx_inprg_ff;
+assign tx_data_cnt_delete = tx_inprg_ff & tx_done;
 
 assign tx_byte.start = 1'b0;
 assign tx_byte.tx_byte = tx_data;
@@ -81,8 +95,10 @@ assign tx_byte.stop = 1'b1;
 assign tx = (tx_send_sync | tx_inprg) ? pre_tx : 1'b1;
 
 assign rx_flag_nxt = 	(rx_done_ff) 	? 1'b1 :
-						(rx_flag_clr) 	? 1'b0 :
+						(rx_flag_clr_sync) 	? 1'b0 :
 										rx_flag;
+
+`MIKE_FF_NRST(rx_flag_clr_sync, rx_flag_clr, clk, n_rst)
 
 `MIKE_FF_NRST(rx_flag, rx_flag_nxt, clk, n_rst)
 `MIKE_FF_NRST(rx_done_ff, rx_done, clk, n_rst)
@@ -92,20 +108,18 @@ assign uart_data_width = 8;
 
 //logic tx_inprg;
 //logic [UART_DATA_SIZE-1:0] tx_data_cnt_val_debug;
-//logic tx_done;
-//logic tx_data_cnt_delete;
 
 
 `MIKE_FF_NRST(rx_inprg_ff, rx_inprg, clk, n_rst)
 `MIKE_FF_NRST(rx_shift_en_ff, rx_shift_en, clk, n_rst)
 `MIKE_FF_NRST(shift_pulse_allign_ff, shift_pulse_allign, clk, n_rst)
 
-assign rx_start = (~rx) & (rx_ff) & (~rx_inprg_ff);
+assign rx_start = (~rx) & (rx_ff) & (~rx_inprg_ff) & (~rx_flag);
 assign rx_clk_cnt_delete = rx_done;
 assign rx_data_cnt_delete = rx_done;
 assign rx_counter_done = rx_counter_ov; // TODO: This is incorrect as it fires at the beginning of the sampling
-assign rx_counter_done_sticky = (rx_counter_done) ? 1'b1 :
-								(rx_done) ? 		1'b0 :
+assign rx_counter_done_sticky = (rx_counter_done) ? 			1'b1 :
+								(rx_done | rx_done_ff) ? 		1'b0 :
 													rx_counter_done_sticky_ff;
 
 `MIKE_FF_NRST(rx_counter_done_sticky_ff, rx_counter_done_sticky, clk, n_rst)
@@ -141,7 +155,7 @@ counter #(
 	.n_rst(n_rst),
 	.clk(clk),
 	.cnt_en(rx_inprg),
-	.cnt_delete(rx_clk_cnt_delete),
+	.cnt_delete(rx_clk_overflow | rx_done),
 	.inc(1'b1),
 	.count(rx_clk_cnt_debug),
 	.overflow(rx_clk_overflow),

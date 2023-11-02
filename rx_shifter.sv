@@ -19,6 +19,9 @@ logic [UART_FRAME_WIDHT-2:0] rx_byte_buffer_nxt;
 logic [UART_FRAME_WIDHT-2:0] rx_byte_buffer;
 rx_byte_stop rx_byte_nxt;
 
+rx_byte_stop rx_byte_tmp;
+
+
 logic rx_done_ff;
 `MIKE_FF_NRST(rx_done_ff, rx_done, clk, n_rst)
 
@@ -32,8 +35,8 @@ always_comb begin
 	else			rx_byte_buffer_nxt = rx_byte_buffer;
 end
 
-logic [UART_DATA_WIDTH-1:0] rx_byte_buffer_inverted;
-for(genvar i=0; i<UART_DATA_WIDTH; i++) assign rx_byte_buffer_inverted[i]=rx_byte_buffer[UART_DATA_WIDTH-i-1];
+logic [UART_FRAME_WIDHT-1:0] rx_byte_buffer_inverted;
+for(genvar i=0; i<UART_FRAME_WIDHT; i++) assign rx_byte_buffer_inverted[i]=rx_byte_buffer[UART_FRAME_WIDHT-i-1];
 
 
 for (genvar g_bit = 0; g_bit < UART_DATA_WIDTH; g_bit++) begin // Does not include start bit
@@ -44,7 +47,20 @@ end
 assign rx_byte_nxt.parity 						= rx_byte_buffer[uart_data_width];
 assign rx_byte_nxt.stop 						= rx_byte_buffer[uart_data_width+1];
 
-`MIKE_FF_EN_NRST(rx_byte, rx_byte_nxt, rx_done_ff, clk, n_rst)
+`MIKE_FF_EN_NRST(rx_byte_tmp, rx_byte_nxt, rx_done_ff, clk, n_rst)
+
+// for(genvar i=0; i<UART_FRAME_WIDHT; i++) assign rx_byte2[i]=rx_byte[UART_FRAME_WIDHT-i-1];
+
+assign rx_byte[0] = rx_byte_tmp[9];
+assign rx_byte[1] = rx_byte_tmp[8];
+assign rx_byte[2] = rx_byte_tmp[7];
+assign rx_byte[3] = rx_byte_tmp[6];
+assign rx_byte[4] = rx_byte_tmp[5];
+assign rx_byte[5] = rx_byte_tmp[4];
+assign rx_byte[6] = rx_byte_tmp[3];
+assign rx_byte[7] = rx_byte_tmp[2];
+assign rx_byte[8] = rx_byte_tmp[1];
+assign rx_byte[9] = rx_byte_tmp[0];
 
 endmodule 
 

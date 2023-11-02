@@ -17,8 +17,8 @@ module counter #(
 );
 
 
-logic [COUNTER_SIZE:0] count_ff;
-logic [COUNTER_SIZE:0] init_val;
+logic [COUNTER_SIZE-1:0] count_ff;
+logic [COUNTER_SIZE-1:0] init_val;
 
 assign init_val = (inc) ? 'b0 : cnt_goal;
 

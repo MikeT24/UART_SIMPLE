@@ -39,7 +39,8 @@ UART_MIKE dut_UART_MIKE(
 	 tx_data = 8'b01010101;
 	 tx_send = '0;
 	 rx = '1;
-	 
+	 rx_flag_clr = 1'b0;
+
 	 
    #20;
     n_rst = 1;
@@ -58,7 +59,32 @@ UART_MIKE dut_UART_MIKE(
 		tx_send = 1'b1;
 	#20 
 		tx_send = 1'b0;
+	#1600
 
+	#100;
+		tx_send = 1'b1; 
+		rx = '0;				//START
+	#110;
+		tx_send = 1'b0;		
+		rx = '1;				//0
+	#110;
+		rx = '0;				//1		
+	#110;
+		rx = '1;				//2	
+	#110;
+		rx = '0;				//3		
+	#110;
+		rx = '1;				//4		
+	#110;
+		rx = '0;				//5		
+	#110;
+		rx = '1;				//6		
+	#110;
+		rx = '0;				//7		
+	#110;
+		rx = '1;				//P		
+	#100
+		rx = '1;				//S
 	 
   end
 
