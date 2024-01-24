@@ -14,7 +14,14 @@ module UART_MIKE
 	output logic  tx,
 	output logic  parity_error,
 	output logic  rx_flag,
-	output logic  [UART_DATA_WIDTH-1:0] rx_data
+	output logic  [UART_DATA_WIDTH-1:0] rx_data,
+	output logic seg_a,
+	output logic seg_b,
+	output logic seg_c,
+	output logic seg_d,
+	output logic seg_e,
+	output logic seg_f,
+	output logic seg_g
 );
 
 // UART_MIKE_ctrl i_UART_MIKE_ctrl(
@@ -78,13 +85,13 @@ logic tx_send_ff2;
 
 logic rx_flag_clr_sync;
 
-`MIKE_FF_NRST(tx_send_ff, tx_send, clk, n_rst)
+`MIKE_FF_NRST(tx_send_ff, ~tx_send, clk, n_rst) 	//NEGATED BECAUSE PUSH BUTTON
 `MIKE_FF_NRST(tx_send_ff2, tx_send_ff, clk, n_rst)
 `MIKE_FF_NRST(tx_inprg_ff, tx_inprg, clk, n_rst)
-
+assign rx_data = rx_byte[UART_DATA_WIDTH-1:0];
 assign tx_send_sync = tx_send_ff & ~tx_send_ff2;
 
-assign tx_inprg = (tx_send) ? 1'b1 : (tx_done) ? 1'b0 : tx_inprg_ff;
+assign tx_inprg = (tx_send_sync) ? 1'b1 : (tx_done) ? 1'b0 : tx_inprg_ff;
 assign tx_data_cnt_delete = tx_inprg_ff & tx_done;
 
 assign tx_byte.start = 1'b0;
@@ -98,7 +105,7 @@ assign rx_flag_nxt = 	(rx_done_ff) 	? 1'b1 :
 						(rx_flag_clr_sync) 	? 1'b0 :
 										rx_flag;
 
-`MIKE_FF_NRST(rx_flag_clr_sync, rx_flag_clr, clk, n_rst)
+`MIKE_FF_NRST(rx_flag_clr_sync, ~rx_flag_clr, clk, n_rst) //NEGATED BECAUSE PUSH BUTTON
 
 `MIKE_FF_NRST(rx_flag, rx_flag_nxt, clk, n_rst)
 `MIKE_FF_NRST(rx_done_ff, rx_done, clk, n_rst)
@@ -227,5 +234,16 @@ tx_shifter tx_shifter (
 	.uart_data_width(uart_data_width)
 );
 
+
+ascii_dec_to_7_seg ascii_dec_to_7_seg(
+	.ascii(rx_data),
+	.seg_a(seg_a),
+	.seg_b(seg_b),
+	.seg_c(seg_c),
+	.seg_d(seg_d),
+	.seg_e(seg_e),
+	.seg_f(seg_f),
+	.seg_g(seg_g)
+);
 
 endmodule

@@ -6,7 +6,7 @@ parameter UART_DATA_WIDTH = 8;
 parameter UART_DATA_SIZE = $clog2(UART_DATA_WIDTH);
 parameter BYTE = 8;
 
-parameter RX_CLOCK_WIDTH = 10;
+parameter RX_CLOCK_WIDTH = 5208; //9600 baud rate
 parameter RX_CLOCK_SIZE = $clog2(RX_CLOCK_WIDTH);
  
 

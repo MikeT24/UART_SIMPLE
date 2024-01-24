@@ -35,14 +35,16 @@ always_comb begin
 	else			rx_byte_buffer_nxt = rx_byte_buffer;
 end
 
-logic [UART_FRAME_WIDHT-1:0] rx_byte_buffer_inverted;
-for(genvar i=0; i<UART_FRAME_WIDHT; i++) assign rx_byte_buffer_inverted[i]=rx_byte_buffer[UART_FRAME_WIDHT-i-1];
+//logic [UART_FRAME_WIDHT-1:0] rx_byte_buffer_inverted;
+//for(genvar i=0; i<UART_FRAME_WIDHT; i++) assign rx_byte_buffer_inverted[i]=rx_byte_buffer[UART_FRAME_WIDHT-i-1];
 
-
-for (genvar g_bit = 0; g_bit < UART_DATA_WIDTH; g_bit++) begin // Does not include start bit
-	assign rx_byte_nxt.rx_byte[g_bit] = (g_bit < uart_data_width) ? rx_byte_buffer[g_bit] : 1'bz;
-	//assign rx_byte_nxt.rx_byte[g_bit] = rx_byte_buffer[g_bit];
-end
+generate
+	genvar g_bit;
+	for (g_bit = 0; g_bit < UART_DATA_WIDTH; g_bit++) begin : gen_rx_byte	// Does not include start bit
+		assign rx_byte_nxt.rx_byte[g_bit] = (g_bit < uart_data_width) ? rx_byte_buffer[g_bit] : 1'bz;
+		//assign rx_byte_nxt.rx_byte[g_bit] = rx_byte_buffer[g_bit];
+	end
+endgenerate
 
 assign rx_byte_nxt.parity 						= rx_byte_buffer[uart_data_width];
 assign rx_byte_nxt.stop 						= rx_byte_buffer[uart_data_width+1];

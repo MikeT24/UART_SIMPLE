@@ -6,8 +6,8 @@ module tx_shifter (
 	input logic n_rst,
 	input logic clk,
 	input logic tx_shift,
-    input logic [UART_FRAME_SIZE-1:0] tx_index,
 	input tx_byte_stop tx_byte,
+    input logic [UART_FRAME_SIZE-1:0] tx_index,
 	input logic [UART_FRAME_SIZE-1:0] uart_data_width,
     output logic  tx
 ); 
